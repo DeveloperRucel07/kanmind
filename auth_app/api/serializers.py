@@ -1,7 +1,7 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 
 
 
@@ -19,6 +19,18 @@ class LoginWithEmailSerializer(serializers.ModelSerializer):
         }
     
     def validate(self, data):
+        """
+        Validate the login data by checking email and password.
+
+        Args:
+            data (dict): The data to validate containing email and password.
+
+        Returns:
+            dict: The validated data with user added.
+
+        Raises:
+            ValidationError: If email or password is invalid.
+        """
         email = data.get('email')
         password = data.get('password')  
         try:

@@ -10,6 +10,5 @@ urlpatterns = [
     path('tasks/reviewing/', TaskReviewerView.as_view(), name='taskreviewing-user' ),
     path('tasks/<int:pk>/', TaskViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='task-detail' ),
     path('tasks/<int:task_id>/comments/', CommentViewSet.as_view(), name='tasklist-comments' ),
-    path('tasks/<int:task_id>/comments/<int:pk>/', CommentRetrieveUpdateDestroy.as_view(), name='comment-detail' ),
-    
+    path('tasks/<int:task_id>/comments/<int:pk>/', CommentRetrieveUpdateDestroy.as_view(), name='comment-detail' ), 
 ]
