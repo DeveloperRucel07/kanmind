@@ -36,7 +36,7 @@ class CanReadTask(BasePermission):
             return user_can_read_task(user, obj)
         return False
 
-class IsAssigneeOrRevierwerTask(BasePermission):
+class IsAssigneeOrReviewerTask(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         if request.method in SAFE_METHODS:
@@ -81,7 +81,7 @@ class CanDeleteTask(BasePermission):
             return user_can_read_task(user, obj)
         elif request.method == "DELETE":
             return obj.owner == user or board.owner == user
-        return obj.owner == user or board.owner == user
+        return obj.owner == user
     
 
 class CanManageComment(BasePermission):

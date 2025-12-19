@@ -2,7 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from .permissions import IsBoardOwnerOrMember, CanDeleteTask, IsAssigneeOrRevierwerTask, IsOwnerAndDeleteOnly, CanManageComment, CanReadTask, CanManageTask
+from .permissions import IsBoardOwnerOrMember, CanDeleteTask, IsAssigneeOrReviewerTask, IsOwnerAndDeleteOnly, CanManageComment, CanReadTask, CanManageTask
 from django.db.models import Q
 from kanmind_app.models import Board, Task, Comment
 from rest_framework import generics
@@ -57,7 +57,7 @@ class CommentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     
 class TaskAssigneeView(generics.ListAPIView):
     serializer_class = TaskDetailSerializer
-    permission_classes = [IsAuthenticated, IsAssigneeOrRevierwerTask, CanManageTask]
+    permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask, CanManageTask]
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(Q(assignee=user))
@@ -65,7 +65,7 @@ class TaskAssigneeView(generics.ListAPIView):
     
 class TaskReviewerView(generics.ListAPIView):
     serializer_class = TaskDetailSerializer
-    permission_classes = [IsAuthenticated, IsAssigneeOrRevierwerTask]
+    permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask]
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(Q(reviewer=user))

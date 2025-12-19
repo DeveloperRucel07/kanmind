@@ -37,8 +37,8 @@ class Task(models.Model):
     description = models.TextField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=20, choices = STATUS_CHOICES, default='to-do')
     priority = models.CharField(max_length=20, choices = PRIORITY_CHOICES, default='medium')
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='assigned_tasks', null=True)
-    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='review_tasks', null=True)
+    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='assigned_tasks', null=True, blank=True)
+    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='review_tasks', null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     def comments_count(self):
         return self.comments.count()

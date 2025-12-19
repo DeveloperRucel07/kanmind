@@ -18,7 +18,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'title', 'description','board','owner', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
-    def comments_count(self):
+    def get_comments_count(self):
         return self.comments.count()
         
     def validate(self, attrs):
@@ -59,7 +59,8 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'author', 'content', 'created_at']
-        ordering = ['-created_at']
+        
+    ordering = ['-created_at']
     
     def get_author(self, obj):
         return obj.author.username
