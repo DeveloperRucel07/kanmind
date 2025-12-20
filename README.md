@@ -57,9 +57,9 @@ The API will be available at `http://127.0.0.1:8000/`.
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
+- `POST /auth/registration/` - User registration
+- `POST /auth/login/` - User login
+- `POST /auth/logout/` - User logout
 
 ### Boards
 - `GET /api/boards/` - List boards (owned or member)
@@ -80,9 +80,9 @@ The API will be available at `http://127.0.0.1:8000/`.
 ### Comments
 - `GET /api/tasks/{task_id}/comments/` - List comments for a task
 - `POST /api/tasks/{task_id}/comments/` - Create a comment
-- `GET /api/comments/{id}/` - Retrieve a comment
-- `PUT /api/comments/{id}/` - Update a comment
-- `DELETE /api/comments/{id}/` - Delete a comment
+- `GET /api/tasks/{task_id}/comments/{id}/` - Retrieve a comment
+- `PUT /api/tasks/{task_id}/comments/{id}/` - Update a comment
+- `DELETE /tasks/{task_id}/api/comments/{id}/` - Delete a comment
 
 ### Utilities
 - `GET /api/check-email/` - Check if email exists
