@@ -19,7 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('auth_app.api.urls')),
+    path('api/', include('auth_app.api.urls')),
     path('api/', include('kanmind_app.api.urls')),
     path('api_auth/', include('rest_framework.urls')),
 ]

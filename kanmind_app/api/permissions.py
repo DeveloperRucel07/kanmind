@@ -61,7 +61,7 @@ class IsOwnerAndDeleteOnly(BasePermission):
         user = request.user
         if request.method == 'DELETE':
             return obj.owner == user or obj.author == user
-        return False
+        return True
 
 class CanReadTask(BasePermission):
     def has_object_permission(self, request, view, obj):

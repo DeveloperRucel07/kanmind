@@ -10,8 +10,8 @@ from .permissions import IsBoardOwnerOrMember, CanDeleteTask, IsAssigneeOrReview
 from .serializers import CheckEmailSerializer, BoardSerializer, User, TaskSerializer, TaskDetailSerializer, CommentSerializer
 
 
-class BoardViewSet(ModelViewSet):
-    permission_classes = [IsBoardOwnerOrMember, IsAuthenticated, IsOwnerAndDeleteOnly]
+class BoardListCreateViewSet(generics.ListCreateAPIView):
+    permission_classes = [IsBoardOwnerOrMember, IsAuthenticated]
     serializer_class = BoardSerializer
     def get_queryset(self):
         """
@@ -22,7 +22,21 @@ class BoardViewSet(ModelViewSet):
         """
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
-    
+
+
+class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsBoardOwnerOrMember, IsAuthenticated, IsOwnerAndDeleteOnly]
+    serializer_class = BoardSerializer
+    queryset  = Board.objects.all()
+    # def get_queryset(self):
+    #     """
+    #     Get the queryset of boards that the authenticated user owns or is a member of.
+
+    #     Returns:
+    #         QuerySet: Boards owned by or accessible to the user.
+    #     """
+    #     user = self.request.user
+    #     return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
     def perform_create(self, serializer):
         """
         Create a new board and add the authenticated user as a member.
