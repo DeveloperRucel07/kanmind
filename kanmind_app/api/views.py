@@ -7,11 +7,11 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from kanmind_app.models import Board, Task, Comment
 from .permissions import IsBoardOwnerOrMember, CanDeleteTask, IsAssigneeOrReviewerTask, IsOwnerAndDeleteOnly, CanManageComment, CanReadTask, CanManageTask
-from .serializers import CheckEmailSerializer, BoardSerializer, User, TaskSerializer, TaskDetailSerializer, CommentSerializer
+from .serializers import CheckEmailSerializer, BoardSerializer, User,BoardDetailReadSerializer, TaskDetailSerializer, CommentSerializer
 
 
 class BoardListCreateViewSet(generics.ListCreateAPIView):
-    permission_classes = [IsBoardOwnerOrMember, IsAuthenticated]
+    permission_classes = [ IsAuthenticated]
     serializer_class = BoardSerializer
     def get_queryset(self):
         """
@@ -26,17 +26,16 @@ class BoardListCreateViewSet(generics.ListCreateAPIView):
 
 class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsBoardOwnerOrMember, IsAuthenticated, IsOwnerAndDeleteOnly]
-    serializer_class = BoardSerializer
     queryset  = Board.objects.all()
-    # def get_queryset(self):
-    #     """
-    #     Get the queryset of boards that the authenticated user owns or is a member of.
 
-    #     Returns:
-    #         QuerySet: Boards owned by or accessible to the user.
-    #     """
-    #     user = self.request.user
-    #     return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
+    def get_serializer_class(self):
+        """
+        Select the read serializer for GET,
+        and the write serializer (with owner_data & members_data) for PATCH/PUT.
+        """
+        if self.request.method in ('PATCH', 'PUT'):
+            return BoardSerializer
+        return BoardDetailReadSerializer
     def perform_create(self, serializer):
         """
         Create a new board and add the authenticated user as a member.
@@ -50,16 +49,8 @@ class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     
 class TaskViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
-    serializer_class = TaskSerializer
+    serializer_class = TaskDetailSerializer
     queryset = Task.objects.all()
-    def perform_create(self, serializer):
-        """
-        Create a new task with the authenticated user as the owner.
-
-        Args:
-            serializer (TaskSerializer): The serializer instance with validated data.
-        """
-        serializer.save(owner=self.request.user)
 
 
 class CommentViewSet(generics.ListCreateAPIView):
@@ -114,8 +105,7 @@ class TaskAssigneeView(generics.ListAPIView):
         """
         user = self.request.user
         return Task.objects.filter(Q(assignee=user))
-    
-    
+       
 class TaskReviewerView(generics.ListAPIView):
     serializer_class = TaskDetailSerializer
     permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask]
@@ -154,7 +144,7 @@ class EmailCheckView(generics.ListAPIView):
         data = {
             "fullname": user.username,
             "email": user.email,
-            "user_id": user.id,
+            "id": user.id,
         }
         return Response(data, status=status.HTTP_200_OK)
 

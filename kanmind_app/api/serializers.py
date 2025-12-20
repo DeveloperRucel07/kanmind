@@ -24,6 +24,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
+    board = serializers.PrimaryKeyRelatedField(queryset=Board.objects.all())
     class Meta:
         model = Task
         fields = ['id', 'title', 'description','board','owner', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
@@ -60,20 +61,23 @@ class TaskSerializer(serializers.ModelSerializer):
         return attrs
 
 class TaskDetailSerializer(serializers.ModelSerializer):
+    comments_count = serializers.SerializerMethodField()
     assignee_id = serializers.PrimaryKeyRelatedField(
-        source='assigned',
+        source='assignee',
         queryset=User.objects.all(),
         write_only=True,
-        required=False
+        required=False, 
+        allow_null=True
         )
     
     reviewer_id = serializers.PrimaryKeyRelatedField(
         source='reviewer',
         queryset=User.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True
         )
-    
+    owner = UserInfoSerializer(read_only=True)
     assignee = UserInfoSerializer(read_only=True)
     reviewer = UserInfoSerializer(read_only=True)
     
@@ -90,6 +94,32 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         """
         return self.comments.count()
     
+    def create(self, validated_data):
+        """
+        Create a task and assign owner from request context.
+        """
+        request = self.context['request']
+        validated_data['owner'] = request.user
+        return super().create(validated_data)
+    
+    def validate(self, attrs):
+        """
+        Validate the task data, ensuring assignee and reviewer are not the same.
+
+        Args:
+            attrs (dict): The attributes to validate.
+
+        Returns:
+            dict: The validated attributes.
+
+        Raises:
+            ValidationError: If assignee and reviewer are the same.
+        """
+        assignee = attrs.get('assignee')
+        reviewer = attrs.get('reviewer')
+        if assignee and reviewer and assignee == reviewer:
+            raise serializers.ValidationError('Assignee and reviewer cannot be the same user')
+        return attrs
     
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
@@ -109,21 +139,53 @@ class CommentSerializer(serializers.ModelSerializer):
             str: The username of the author.
         """
         return obj.author.username
-    
+
+class BoardDetailReadSerializer(serializers.ModelSerializer):
+    owner_id = serializers.IntegerField(read_only=True)
+    members = UserInfoSerializer(many=True, read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Board
+        fields = [
+            'id',
+            'title',
+            'owner_id',
+            'members',
+            'tasks',
+        ]
+ 
 class BoardSerializer(serializers.ModelSerializer): 
     member_count = serializers.SerializerMethodField()
     ticket_count = serializers.SerializerMethodField()
     tasks_to_do_count = serializers.SerializerMethodField()
     tasks_high_prio_count = serializers.SerializerMethodField()
+    owner_id = serializers.IntegerField(read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
     members = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=User.objects.all() 
+        queryset=User.objects.all(),
+        required=False,
+        write_only = True,
+        allow_null=True,   
     )
     class Meta:
         model= Board
-        fields = ['id', 'title', 'owner','members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count']
-        read_only_fields = ['owner']
-    
+        fields = ['id', 'title','owner','owner_id','members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count']
+            
+    def create(self, validated_data):
+        members = validated_data.pop('members', [])
+        request = self.context['request']
+        if members is None:
+            members = []   
+        board = Board.objects.create(owner=request.user, **validated_data)
+        board.members.add(request.user) 
+
+        if members:
+            board.members.add(*members)
+
+        return board
+        
     def get_member_count(self, obj):
         """
         Get the count of members in the board.
