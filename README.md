@@ -22,7 +22,7 @@ KanMind is a Django-based task management application built with Django REST Fra
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/kanmind.git
+   git clone https://github.com/DeveloperRucel07/kanmind.git
    cd kanmind
    ```
 
