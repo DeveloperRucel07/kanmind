@@ -141,7 +141,7 @@ class CanManageTask(BasePermission):
         if request.method in SAFE_METHODS:
             return user_can_read_task(user, obj)
 
-        if request.method in ["PUT", "PATCH"]:
+        if request.method =="PATCH":
             return user_can_read_task(user, obj)
 
         if request.method == "DELETE":
@@ -216,9 +216,6 @@ class CanManageComment(BasePermission):
 
         if request.method in SAFE_METHODS:
             return user_can_read_task(user, task)
-
-        if request.method in ["PUT", "PATCH"]:
-            return obj.author == user
 
         if request.method == "DELETE":
             return obj.author == user or task.board.owner == user

@@ -57,11 +57,11 @@ class CommentViewSet(generics.ListCreateAPIView):
         Get the queryset of comments for the specified task.
 
         Returns:
-            QuerySet: Comments associated with the task.
+            QuerySet: Comments associated with the task. and ordered comments.
         """
         task_id = self.kwargs['task_id']
         task = get_object_or_404(Task, id=task_id)
-        return Comment.objects.filter(Q(task = task))
+        return Comment.objects.filter(Q(task = task)).order_by("-created_at")
     
     def perform_create(self, serializer):
         """

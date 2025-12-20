@@ -74,8 +74,8 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         required=False
         )
     
-    assignee = UserInfoSerializer(source= 'assigned', read_only=True)
-    reviewer = UserInfoSerializer(source= 'reviewer', read_only=True)
+    assignee = UserInfoSerializer(read_only=True)
+    reviewer = UserInfoSerializer(read_only=True)
     
     class Meta:
         model = Task
@@ -97,7 +97,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'author', 'content', 'created_at']
         
-    ordering = ['-created_at']
     
     def get_author(self, obj):
         """

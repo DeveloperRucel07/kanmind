@@ -16,7 +16,7 @@ KanMind is a Django-based task management application built with Django REST Fra
 - **Backend**: Django 6.0
 - **API**: Django REST Framework 3.16.1
 - **Database**: SQLite
-- **Authentication**: Token-based authentication
+- **Authentication**: Token-based authentication, authentication with email and password
 
 ## Installation
 
