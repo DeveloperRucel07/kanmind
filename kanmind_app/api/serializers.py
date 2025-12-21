@@ -25,9 +25,27 @@ class UserInfoSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     board = serializers.PrimaryKeyRelatedField(queryset=Board.objects.all())
+    
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        source='assignee',
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False, 
+        allow_null=True
+        )
+    
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        source='reviewer',
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True
+        )
+    assignee = UserInfoSerializer(read_only=True)
+    reviewer = UserInfoSerializer(read_only=True)
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description','board','owner', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
+        fields = ['id', 'title', 'description','board','owner', 'status', 'priority', 'assignee','assignee_id', 'reviewer','reviewer_id', 'due_date', 'comments_count']
         
     def get_comments_count(self, obj):
         """
@@ -40,6 +58,20 @@ class TaskSerializer(serializers.ModelSerializer):
             int: Number of comments.
         """
         return obj.comments.count()
+
+    def create(self, validated_data):
+        """
+        Create a task and assign owner from request context.
+        """
+        request = self.context['request']
+        board = validated_data.pop('board', None)
+        if board is None:
+            raise serializers.ValidationError("Board is required")
+
+        validated_data['owner'] = request.user
+        validated_data['board'] = board
+        return super().create(validated_data)
+        
         
     def validate(self, attrs):
         """
@@ -174,6 +206,16 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = ['id', 'title','owner','owner_id','members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count']
             
     def create(self, validated_data):
+        """create a Board with the current user as owner, add the usere automaticaaly as member
+
+        Args:
+            validated_data (Board): board instance
+
+        Returns:
+            Board: board instance
+        """
+        
+        
         members = validated_data.pop('members', [])
         request = self.context['request']
         if members is None:
@@ -233,6 +275,20 @@ class BoardSerializer(serializers.ModelSerializer):
             int: Number of high priority tasks.
         """
         return obj.tasks.filter(priority='high').count()
+
+
+class BoardPatchSerialiser(serializers.ModelSerializer):
+    owner = UserInfoSerializer(read_only=True)
+    members = UserInfoSerializer(many=True, read_only=True  )
+    
+    owner_data = owner
+    members_data = members
+    
+    class Meta:
+        model= Board
+        fields = ['id', 'title','owner','owner_data','members', 'members_data']
+    
+    
 
 class CheckEmailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()

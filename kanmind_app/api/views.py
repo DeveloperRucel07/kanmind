@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from kanmind_app.models import Board, Task, Comment
 from .permissions import IsBoardOwnerOrMember, CanDeleteTask, IsAssigneeOrReviewerTask, IsOwnerAndDeleteOnly, CanManageComment, CanReadTask, CanManageTask
-from .serializers import CheckEmailSerializer, BoardSerializer, User,BoardDetailReadSerializer, TaskDetailSerializer, CommentSerializer
+from .serializers import CheckEmailSerializer, BoardSerializer, User,BoardDetailReadSerializer, TaskDetailSerializer, CommentSerializer, BoardPatchSerialiser, TaskSerializer
 
 
 class BoardListCreateViewSet(generics.ListCreateAPIView):
@@ -34,7 +34,7 @@ class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         and the write serializer (with owner_data & members_data) for PATCH/PUT.
         """
         if self.request.method in ('PATCH', 'PUT'):
-            return BoardSerializer
+            return BoardPatchSerialiser
         return BoardDetailReadSerializer
     def perform_create(self, serializer):
         """
@@ -47,7 +47,21 @@ class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         board.members.add(self.request.user)
     
     
-class TaskViewSet(ModelViewSet):
+class TaskListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+    
+    # def get_serializer_class(self):
+    #     """
+    #     Select the read serializer for GET,
+    #     and the write serializer (with owner_data & members_data) for PATCH/PUT.
+    #     """
+    #     if self.request.method in ('GET', 'OPTIONS'):
+    #         return TaskDetailSerializer
+    #     return TaskSerializer
+    
+class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
     serializer_class = TaskDetailSerializer
     queryset = Task.objects.all()

@@ -17,7 +17,8 @@ staticfiles/
 # Migrations (optional – see note below)
 **/migrations/*
 !**/migrations/__init__.py
-
+kanmind_app/migrations/*.py
+!kanmind_app/migrations/__init__.
 # Environment variables
 .env
 .env.*

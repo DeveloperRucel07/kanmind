@@ -57,9 +57,9 @@ The API will be available at `http://127.0.0.1:8000/`.
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/registration/` - User registration
-- `POST /auth/login/` - User login
-- `POST /auth/logout/` - User logout
+- `POST /api/registration/` - User registration
+- `POST /api/login/` - User login
+- `POST /api/logout/` - User logout
 
 ### Boards
 - `GET /api/boards/` - List boards (owned or member)
