@@ -23,7 +23,6 @@ class BoardListCreateViewSet(generics.ListCreateAPIView):
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
 
-
 class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsBoardOwnerOrMember, IsAuthenticated, IsOwnerAndDeleteOnly]
     queryset  = Board.objects.all()
@@ -45,8 +44,7 @@ class BoardRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         """
         board = serializer.save(owner = self.request.user)
         board.members.add(self.request.user)
-    
-    
+        
 class TaskListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
     serializer_class = TaskSerializer
@@ -62,10 +60,11 @@ class TaskListCreateView(generics.ListCreateAPIView):
     #     return TaskSerializer
     
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
+    permission_classes = [IsAuthenticated,  CanDeleteTask ]
     serializer_class = TaskDetailSerializer
     queryset = Task.objects.all()
-
+    def perform_update(self, serializer):
+        serializer.save()
 
 class CommentViewSet(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
@@ -105,8 +104,7 @@ class CommentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         """
         user = self.request.user
         return Comment.objects.filter(Q(author = user))
-    
-    
+      
 class TaskAssigneeView(generics.ListAPIView):
     serializer_class = TaskDetailSerializer
     permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask, CanManageTask]

@@ -9,6 +9,16 @@ from .serializers import LoginWithEmailSerializer, RegistrationSerializer
 class RegistrationView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
+        """User registration View
+
+        Args:
+            request (request): user request
+
+        Returns:
+            data, status: return the user data with the status 200, if the infornmations was correct and 
+            400 if noting was probided or if informatons provided as incorrect.
+        """
+        
         serializer = RegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -28,6 +38,16 @@ class LoginView(ObtainAuthToken):
     permission_classes = [AllowAny]
     serializer_class = LoginWithEmailSerializer
     def post(self, request):
+        """Login User View
+
+        Args:
+            request (request): request
+
+        Returns:
+            data, status: return the user data with the status 200, if the infornmations was correct 
+            and 400 if noting was probided or if informatons provided as incorrect.
+        """
+        
         serializer = self.serializer_class(data = request.data)
         data = {}
         if serializer.is_valid():
@@ -43,10 +63,12 @@ class LoginView(ObtainAuthToken):
         else:
             return Response({'detail':'please check your username and password'}, status=status.HTTP_400_BAD_REQUEST)
        
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Logout user by delete the token in the Token database
+        """
         request.user.auth_token.delete() 
         return Response({"detail": "Logout Successfully. Your Token was deleted"}, status=status.HTTP_200_OK)

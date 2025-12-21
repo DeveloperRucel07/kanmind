@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from kanmind_app.models import Task, Comment, Board
-# User = get_user_model()
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -25,7 +24,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     board = serializers.PrimaryKeyRelatedField(queryset=Board.objects.all())
-    
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
     assignee_id = serializers.PrimaryKeyRelatedField(
         source='assignee',
         queryset=User.objects.all(),
@@ -61,15 +60,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Create a task and assign owner from request context.
+        Create a task and automatically set the authenticated user as owner.
         """
         request = self.context['request']
-        board = validated_data.pop('board', None)
-        if board is None:
-            raise serializers.ValidationError("Board is required")
-
         validated_data['owner'] = request.user
-        validated_data['board'] = board
         return super().create(validated_data)
         
         
@@ -125,14 +119,6 @@ class TaskDetailSerializer(serializers.ModelSerializer):
             int: Number of comments.
         """
         return self.comments.count()
-    
-    def create(self, validated_data):
-        """
-        Create a task and assign owner from request context.
-        """
-        request = self.context['request']
-        validated_data['owner'] = request.user
-        return super().create(validated_data)
     
     def validate(self, attrs):
         """
@@ -276,20 +262,38 @@ class BoardSerializer(serializers.ModelSerializer):
         """
         return obj.tasks.filter(priority='high').count()
 
-
 class BoardPatchSerialiser(serializers.ModelSerializer):
-    owner = UserInfoSerializer(read_only=True)
-    members = UserInfoSerializer(many=True, read_only=True  )
-    
-    owner_data = owner
-    members_data = members
+    owner_data = UserInfoSerializer(source = 'owner',read_only=True)
+    members = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all(),
+        write_only = True,
+        required=False
+    )
+    members_data = UserInfoSerializer(source='members', many=True, read_only=True)
     
     class Meta:
         model= Board
-        fields = ['id', 'title','owner','owner_data','members', 'members_data']
-    
-    
+        fields = ['id', 'title','owner_data','members', 'members_data']
+        
+    def update(self, instance, validated_data):
+        """Update the Board 
 
+        Args:
+            validated_data (Board): board instance
+
+        Returns:
+            Board: board instance
+        """
+        
+        members = validated_data.pop('members', None)
+        instance = super().update(instance, validated_data)
+
+        if members is not None:
+            instance.members.set(members)
+
+        return instance
+        
 class CheckEmailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:

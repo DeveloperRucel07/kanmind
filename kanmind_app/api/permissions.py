@@ -44,7 +44,6 @@ class IsBoardOwnerOrMember(BasePermission):
             return obj.owner == user
         return obj.owner == user
 
-
 class IsOwnerAndDeleteOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         """
@@ -121,7 +120,7 @@ class CanManageTask(BasePermission):
                 return False
             return Board.objects.filter(id=board_id ).filter( Q(owner=user) | Q(members=user)).exists()
 
-        return True
+        return False
 
     def has_object_permission(self, request, view, obj):
         """
@@ -146,8 +145,7 @@ class CanManageTask(BasePermission):
 
         if request.method == "DELETE":
             return board.owner == user or obj.owner == user
-        return False
-
+        
 class CanDeleteTask(BasePermission):
 
     def has_object_permission(self, request, view, obj):
@@ -170,7 +168,6 @@ class CanDeleteTask(BasePermission):
             return obj.owner == user or board.owner == user
         return obj.owner == user
     
-
 class CanManageComment(BasePermission):
 
     def has_permission(self, request, view):
