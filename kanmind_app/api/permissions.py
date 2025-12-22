@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-
+from rest_framework.exceptions import PermissionDenied, ValidationError, NotFound
+from django.shortcuts import get_object_or_404
+from kanmind_app.models import Board, Task
 
 def user_can_read_task(user, task):
     """
@@ -97,7 +99,36 @@ class IsAssigneeOrReviewerTask(BasePermission):
         return False
 
 class CanManageTask(BasePermission):
+    def has_permission(self, request, view):
+        """give permission to create a task if the user is member of the Board or not.
+        Also check if the Board exist or not.
 
+        Args:
+            view (task): Task LIst create View
+
+        Raises:
+            ValidationError: if the board was not give
+            NotFound: if the give board wass not found
+            PermissionDenied: if the user don't have right access
+
+        Returns:
+            bool: True if everything is OK
+        """
+        
+        if request.method != 'POST':
+            return True
+        board_id = request.data.get('board')
+        if not board_id:
+            raise ValidationError({"detail": "Board is required to create Task here"})
+        try:
+            board = Board.objects.get(id=board_id)
+        except Board.DoesNotExist:
+            raise NotFound("Board does not exist.")
+        user = request.user
+        if board.owner != user and not board.members.filter(id=user.id).exists():
+            raise PermissionDenied("You are not a member of this Board")
+        return True
+    
     def has_object_permission(self, request, view, obj):
         """
         Check object-level permission for managing a specific task.
@@ -119,9 +150,6 @@ class CanManageTask(BasePermission):
         if request.method =="PATCH":
             return user_can_read_task(user, obj)
         
-        if request.method =="POST":
-            return user_can_read_task(user, obj)
-
         if request.method == "DELETE":
             return board.owner == user or obj.owner == user
         
@@ -148,6 +176,22 @@ class CanDeleteTask(BasePermission):
         return obj.owner == user
     
 class CanManageComment(BasePermission):
+    
+    def has_permission(self, request, view):
+        """
+            Allows comment creation only if the user is a member or owner of the board.
+        """
+        if request.method != 'POST':
+            return True
+        task_id = view.kwargs.get('task_id')
+        if not task_id:
+            raise NotFound("Task ID is missing.")
+        task = get_object_or_404(Task, id=task_id)
+        board = task.board
+        user = request.user
+        if board.owner == user or board.members.filter(id=user.id).exists():
+            return True
+        raise PermissionDenied("You must be a board member to comment on this task.")
 
     def has_object_permission(self, request, view, obj):
         """
@@ -166,10 +210,7 @@ class CanManageComment(BasePermission):
 
         if request.method in SAFE_METHODS:
             return user_can_read_task(user, task)
-        
-        if request.method =="POST":
-            return user_can_read_task(user, task)
-        
+
         if request.method == "DELETE":
             return obj.author == user or task.board.owner == user
 

@@ -57,19 +57,7 @@ class TaskSerializer(serializers.ModelSerializer):
             int: Number of comments.
         """
         return obj.comments.count()
-    
-    
-    def validate_board(self, board):
-        """
-        Ensure the authenticated user is a member of the board.
-        """
-        request = self.context['request']
-        user = request.user
-
-        if not (board.owner == user or board.members.filter(id=user.id).exists()):
-            raise serializers.ValidationError("You are not a member of this board.")
-        return board
-        
+            
     def create(self, validated_data):
         """
         Create a task and automatically set the authenticated user as owner.
