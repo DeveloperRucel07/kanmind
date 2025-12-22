@@ -39,6 +39,7 @@ KanMind is a Django-based task management application built with Django REST Fra
 
 4. Run migrations:
    ```bash
+   python manage.py makemigrations
    python manage.py migrate
    ```
 

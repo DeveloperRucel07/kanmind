@@ -1,7 +1,6 @@
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -49,15 +48,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated,  CanDeleteTask, CanReadTask, CanManageTask ]
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    
-    # def get_serializer_class(self):
-    #     """
-    #     Select the read serializer for GET,
-    #     and the write serializer (with owner_data & members_data) for PATCH/PUT.
-    #     """
-    #     if self.request.method in ('GET', 'OPTIONS'):
-    #         return TaskDetailSerializer
-    #     return TaskSerializer
+
     
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated,  CanDeleteTask ]

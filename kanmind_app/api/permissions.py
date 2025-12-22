@@ -1,6 +1,4 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from kanmind_app.models import Board, Task
-from django.db.models import Q
 
 
 def user_can_read_task(user, task):
@@ -100,28 +98,6 @@ class IsAssigneeOrReviewerTask(BasePermission):
 
 class CanManageTask(BasePermission):
 
-    def has_permission(self, request, view):
-        """
-        Check general permission for managing tasks, especially for POST requests.
-
-        Args:
-            request (Request): The HTTP request object.
-            view: The view that is being accessed.
-
-        Returns:
-            bool: True if the user has permission, False otherwise.
-        """
-        user = request.user
-        if not user.is_authenticated:
-            return False
-        if request.method == "POST":
-            board_id = request.data.get("board")
-            if not board_id:
-                return False
-            return Board.objects.filter(id=board_id ).filter( Q(owner=user) | Q(members=user)).exists()
-
-        return False
-
     def has_object_permission(self, request, view, obj):
         """
         Check object-level permission for managing a specific task.
@@ -141,6 +117,9 @@ class CanManageTask(BasePermission):
             return user_can_read_task(user, obj)
 
         if request.method =="PATCH":
+            return user_can_read_task(user, obj)
+        
+        if request.method =="POST":
             return user_can_read_task(user, obj)
 
         if request.method == "DELETE":
@@ -170,32 +149,6 @@ class CanDeleteTask(BasePermission):
     
 class CanManageComment(BasePermission):
 
-    def has_permission(self, request, view):
-        """
-        Check general permission for managing comments on a task.
-
-        Args:
-            request (Request): The HTTP request object.
-            view: The view that is being accessed.
-
-        Returns:
-            bool: True if the user has permission, False otherwise.
-        """
-        user = request.user
-        if not user.is_authenticated:
-            return False
-        
-        task_id = view.kwargs.get("task_id")
-        if not task_id:
-            return False
-        
-        try:
-            task = Task.objects.select_related("board").get(id=task_id)
-        except Task.DoesNotExist:
-            return False
-        
-        return user_can_read_task(user, task)
-
     def has_object_permission(self, request, view, obj):
         """
         Check object-level permission for managing a specific comment.
@@ -213,7 +166,10 @@ class CanManageComment(BasePermission):
 
         if request.method in SAFE_METHODS:
             return user_can_read_task(user, task)
-
+        
+        if request.method =="POST":
+            return user_can_read_task(user, task)
+        
         if request.method == "DELETE":
             return obj.author == user or task.board.owner == user
 
