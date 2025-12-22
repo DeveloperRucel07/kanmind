@@ -181,8 +181,6 @@ class CanManageComment(BasePermission):
         """
             Allows comment creation only if the user is a member or owner of the board.
         """
-        if request.method != 'POST':
-            return True
         task_id = view.kwargs.get('task_id')
         if not task_id:
             raise NotFound("Task ID is missing.")
@@ -191,7 +189,7 @@ class CanManageComment(BasePermission):
         user = request.user
         if board.owner == user or board.members.filter(id=user.id).exists():
             return True
-        raise PermissionDenied("You must be a board member to comment on this task.")
+        raise PermissionDenied("You must be a board member to perform this action")
 
     def has_object_permission(self, request, view, obj):
         """
@@ -206,12 +204,8 @@ class CanManageComment(BasePermission):
             bool: True if the user has permission, False otherwise.
         """
         user = request.user
-        task = obj.task
-
-        if request.method in SAFE_METHODS:
-            return user_can_read_task(user, task)
-
-        if request.method == "DELETE":
-            return obj.author == user or task.board.owner == user
-
-        return False
+        if request.method in ["PATCH", "PUT", "DELETE"]:
+            if obj.author == user:
+                return True
+            raise PermissionDenied("You are not the Author for this comment.")
+        return True
