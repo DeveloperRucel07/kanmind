@@ -66,25 +66,6 @@ class TaskSerializer(serializers.ModelSerializer):
         validated_data['owner'] = request.user
         return super().create(validated_data)
         
-        
-    def validate(self, attrs):
-        """
-        Validate the task data, ensuring assignee and reviewer are not the same.
-
-        Args:
-            attrs (dict): The attributes to validate.
-
-        Returns:
-            dict: The validated attributes.
-
-        Raises:
-            ValidationError: If assignee and reviewer are the same.
-        """
-        assignee = attrs.get('assignee')
-        reviewer = attrs.get('reviewer')
-        if assignee and reviewer and assignee == reviewer:
-            raise serializers.ValidationError('Assignee and reviewer cannot be the same user')
-        return attrs
 
 class TaskDetailSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
@@ -119,25 +100,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
             int: Number of comments.
         """
         return self.comments.count()
-    
-    def validate(self, attrs):
-        """
-        Validate the task data, ensuring assignee and reviewer are not the same.
 
-        Args:
-            attrs (dict): The attributes to validate.
-
-        Returns:
-            dict: The validated attributes.
-
-        Raises:
-            ValidationError: If assignee and reviewer are the same.
-        """
-        assignee = attrs.get('assignee')
-        reviewer = attrs.get('reviewer')
-        if assignee and reviewer and assignee == reviewer:
-            raise serializers.ValidationError('Assignee and reviewer cannot be the same user')
-        return attrs
     
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()

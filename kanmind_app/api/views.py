@@ -107,7 +107,7 @@ class CommentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
       
 class TaskAssigneeView(generics.ListAPIView):
     serializer_class = TaskDetailSerializer
-    permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask, CanManageTask]
+    permission_classes = [IsAuthenticated, IsAssigneeOrReviewerTask]
     def get_queryset(self):
         """
         Get the queryset of tasks assigned to the authenticated user.
@@ -131,7 +131,7 @@ class TaskReviewerView(generics.ListAPIView):
         user = self.request.user
         return Task.objects.filter(Q(reviewer=user))
 
-class EmailCheckView(generics.ListAPIView):
+class EmailCheckView(generics.GenericAPIView):
     permission_classes  = [IsAuthenticated]
     serializer_class = CheckEmailSerializer
     
