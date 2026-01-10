@@ -22,6 +22,8 @@ kanmind_app/migrations/*.py
 # Environment variables
 .env
 .env.*
+savetoserver.bat
+crontabfile.sh
 
 # Logs
 *.log
